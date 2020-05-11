@@ -1,6 +1,6 @@
 Part 1: 
-![](images/%20part1.png)
-</br>
+![](images/part1.png)
+
 Part2:
 https://www.shadertoy.com/view/tdXfDX
 
