@@ -4,3 +4,6 @@ Part 7b Demo: https://drive.google.com/file/d/1T0ngUH0cUtN4I15sSNTukOaOCMuaj20Z/
 
 
 Part 7c Demo: https://drive.google.com/file/d/1bRU8T03TAaMio1iyEbRs5CFKhfBzPa0c/view?usp=sharing
+
+
+Lab Partner - My lab partner did not repsond by the time I wanted to submit.
