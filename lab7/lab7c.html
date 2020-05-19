@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Lab 7: Mesh Manipulation</title>
+		<style>
+			body { margin: 0; }
+			canvas { display: block; }
+		</style>
+	</head>
+	<body>
+		<script src="../three.js-master/build/three.js"></script>
+		<script id="vertexShader" type="x-shader/x-vertex">
+			 // code for vertex shader
+			 uniform sampler2D heightMap1;
+			 varying vec2 vUv;
+			 void main() {
+				vUv = uv;
+				vec4 heightColor = texture2D(heightMap1, uv);
+				vec3 newPosition = position + normal * 1.5 * heightColor.r;
+				vec4 modelViewPosition = modelViewMatrix * vec4(newPosition, 0.8);
+				gl_Position = projectionMatrix * modelViewPosition;
+			 }
+		</script>
+
+		<script id="fragmentShader" type="x-shader/x-fragment">
+			 // code for fragment shader
+			 uniform sampler2D texture1;
+			 varying vec2 vUv;
+			 void main() {
+				gl_FragColor = texture2D(texture1, vUv);
+			 }
+		</script>
+		<script src="../three.js-master/examples/js/loaders/GLTFLoader.js"></script>
+
+		<script>
+			// setup the scene
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(75, 
+			window.innerWidth/window.innerHeight, 0.1, 1000);
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+			camera.position.y = 6.0;
+			// camera.position.x = 2;
+			camera.position.z = 1;
+			camera.rotation.x = -.5;
+
+			const light = new THREE.DirectionalLight(0xffffff, 1.0);
+			light.position.set(1,1,1).normalize();
+			scene.add(light);
+			scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+			var loader = new THREE.GLTFLoader();
+			loader.load('turtle.glb', function (gltf) {
+				gltf.scene.scale.x = .01;
+				gltf.scene.scale.y = .01;
+				gltf.scene.scale.z = .01;
+				gltf.scene.position.z = -10;
+				gltf.scene.position.x = 4;
+				gltf.scene.position.y = 2;
+				gltf.scene.rotation.z = 0;
+				gltf.scene.rotation.x = 0;
+				gltf.scene.rotation.y = 3;
+
+				scene.add(gltf.scene);
+				}, function (xhr) {
+				console.log((xhr.loaded / xhr.total * 100) + '% loaded' );
+				}, function (error) {
+				console.error(error);
+			});
+			var loader = new THREE.GLTFLoader();
+			loader.load('obj-shark.glb', function (gltf) {
+				gltf.scene.scale.x = .5;
+				gltf.scene.scale.y = .5;
+				gltf.scene.scale.z = .5;
+				gltf.scene.position.z = -10;
+				gltf.scene.position.x = -4.25;
+				gltf.scene.position.y = -.2;
+				// gltf.scene.rotation.z = 0;
+				// gltf.scene.rotation.x = 0;
+				gltf.scene.rotation.y = 3.14;
+
+
+				scene.add(gltf.scene);
+				}, function (xhr) {
+				console.log((xhr.loaded / xhr.total * 100) + '% loaded' );
+				}, function (error) {
+				console.error(error);
+			});
+
+
+			var uniforms = {
+			texture1: { type: "t", value:THREE.ImageUtils.loadTexture("RXqyibE.png")},
+			heightMap1: { type: "t",value:THREE.ImageUtils.loadTexture("heightMap1.png")}
+			};
+
+			var material = new THREE.ShaderMaterial({ uniforms: uniforms, 
+			vertexShader: document.getElementById('vertexShader').textContent, fragmentShader: document.getElementById('fragmentShader').textContent});
+
+			var plane = new THREE.Mesh(new THREE.PlaneGeometry(10, 11, 200, 
+				200), material);
+			plane.position.z = -10;
+			plane.position.y = -.5;
+			plane.rotation.x = -Math.PI / 2;
+			scene.add(plane);
+			const mat = new THREE.MeshPhongMaterial({color:0x2288ff, 
+				Shininess:100, side:THREE.DoubleSide})
+			var p = new THREE.PlaneGeometry(12, 10.5, 100, 100);
+			var plane = new THREE.Mesh(p, mat);
+			plane.position.z = -9;
+			plane.rotation.x = -1.5;
+
+			scene.add(plane);
+			var matShader;
+			mat.onBeforeCompile = (shader) => {
+				shader.uniforms.time = { value: 0}
+				shader.vertexShader = `
+				        uniform float time;
+				    ` + shader.vertexShader
+				
+				const token = '#include <begin_vertex>'
+				const customTransform = `
+				        vec3 transformed = vec3(position);
+				        float freq = 3.0;
+				        float amp = 0.1;
+				        float angle = (time + position.x)*freq;
+				        transformed.z += sin(angle)*amp;
+				        objectNormal = normalize(vec3(-amp * freq * cos(angle),0.0,1.0));
+						vNormal = normalMatrix * objectNormal;
+				`
+				shader.vertexShader = shader.vertexShader.replace(token,customTransform)
+				matShader = shader
+			}
+
+
+			
+			function animate(time) {
+				if(matShader) matShader.uniforms.time.value = time/1000;
+				renderer.render(scene, camera);
+			}
+			renderer.setAnimationLoop(animate)
+		</script>
+	</body>
+</html>
